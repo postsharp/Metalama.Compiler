@@ -4,6 +4,8 @@
 
 #nullable enable
 
+using System.Collections.Immutable;
+
 namespace Microsoft.CodeAnalysis.CSharp
 {
     /// <summary>
@@ -37,6 +39,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// the end of the offending text.
         /// </value>
         internal bool ShouldIncludeErrorEndLocation { get; set; }
+
+        internal ImmutableArray<(string, string)> RoslynExOptions { get; set; }
 
         internal CSharpCommandLineArguments()
         {

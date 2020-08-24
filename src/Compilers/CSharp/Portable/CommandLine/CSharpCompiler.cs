@@ -19,6 +19,7 @@ using Roslyn.Utilities;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using RoslynEx;
+using System.Reflection;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -388,14 +389,29 @@ namespace Microsoft.CodeAnalysis.CSharp
             return compilationOut;
         }
 
+        internal interface ITransformerConfigScriptRunner
+        {
+            ImmutableArray<object> RunConfigScript(ImmutableArray<(string, string)> roslynExOptions);
+        }
+
         private protected override Compilation RunTransformers(Compilation input, ImmutableArray<ISourceTransformer> transformers, DiagnosticBag diagnostics)
         {
+            ImmutableArray<object> RunConfigScript()
+            {
+                // TODO: figure out a better way to break the cyclic dependency?
+                var scriptRunnerType = Assembly.LoadFrom("Microsoft.CodeAnalysis.CSharp.Scripting").GetType("TransformerConfigScriptRunner");
+                var scriptRunner = (ITransformerConfigScriptRunner)Activator.CreateInstance(scriptRunnerType);
+
+                return scriptRunner.RunConfigScript(Arguments.RoslynExOptions);
+            }
+
             var compilation = input;
+            var configOptions = RunConfigScript();
             foreach (var transformer in transformers)
             {
                 try
                 {
-                    var context = new SourceTransformerContext(compilation, diagnostics);
+                    var context = new SourceTransformerContext(compilation, diagnostics, configOptions);
                     compilation = transformer.Execute(context);
                 }
                 catch (Exception ex)

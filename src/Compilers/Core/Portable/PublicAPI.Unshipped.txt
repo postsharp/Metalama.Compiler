@@ -24,6 +24,7 @@ RoslynEx.ISourceTransformer
 RoslynEx.ISourceTransformer.Execute(RoslynEx.SourceTransformerContext context) -> Microsoft.CodeAnalysis.Compilation
 RoslynEx.SourceTransformerContext
 RoslynEx.SourceTransformerContext.Compilation.get -> Microsoft.CodeAnalysis.Compilation
+RoslynEx.SourceTransformerContext.GetOptions<T>() -> T
 RoslynEx.SourceTransformerContext.ReportDiagnostic(Microsoft.CodeAnalysis.Diagnostic diagnostic) -> void
 RoslynEx.TransformerAttribute
 RoslynEx.TransformerAttribute.TransformerAttribute() -> void

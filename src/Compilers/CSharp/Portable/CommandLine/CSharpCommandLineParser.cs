@@ -136,6 +136,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool publicSign = false;
             string? sourceLink = null;
             string? ruleSetPath = null;
+            List<(string, string)> roslynExOptions = new();
 
             // Process ruleset files first so that diagnostic severity settings specified on the command line via
             // /nowarn and /warnaserror can override diagnostic severity settings specified in the ruleset file.
@@ -1292,6 +1293,14 @@ namespace Microsoft.CodeAnalysis.CSharp
                             }
                             continue;
 
+                        case "roslynexoptions":
+                            foreach (var option in ParseSeparatedStrings(value, new[] { ';' }))
+                            {
+                                var parts = option.Split('=');
+                                roslynExOptions.Add((parts[0], parts[1]));
+                            }
+                            continue;
+
                         case "-":
                             if (Console.IsInputRedirected)
                             {
@@ -1520,7 +1529,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                 PreferredUILang = preferredUILang,
                 ReportAnalyzer = reportAnalyzer,
                 SkipAnalyzers = skipAnalyzers,
-                EmbeddedFiles = embeddedFiles.AsImmutable()
+                EmbeddedFiles = embeddedFiles.AsImmutable(),
+                RoslynExOptions = roslynExOptions.AsImmutable()
             };
         }
 
