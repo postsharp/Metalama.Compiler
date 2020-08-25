@@ -66,6 +66,10 @@
       <PdbFile Condition="'$(PdbFile)' == '' AND '$(OutputType)' == 'winmdobj' AND '$(_DebugSymbolsProduced)' == 'true'">$(IntermediateOutputPath)$(TargetName).compile.pdb</PdbFile>
     </PropertyGroup>
 
+    <PropertyGroup>
+      <RoslynExConfigFile Condition="$(RoslynExConfigFile) == '' AND Exists('Config.csx')">Config.csx</RoslynExConfigFile>
+    </PropertyGroup>
+
     <!-- Condition is to filter out the _CoreCompileResourceInputs so that it doesn't pass in culture resources to the compiler -->
     <Csc Condition="'%(_CoreCompileResourceInputs.WithCulture)' != 'true'"
          AdditionalLibPaths="$(AdditionalLibPaths)"
@@ -145,7 +149,8 @@
          Win32Manifest="$(Win32Manifest)"
          Win32Resource="$(Win32Resource)"
          PathMap="$(PathMap)"
-         SourceLink="$(SourceLink)">
+         SourceLink="$(SourceLink)"
+         RoslynExConfigFile="$(RoslynExConfigFile)">
       <Output TaskParameter="CommandLineArgs" ItemName="CscCommandLineArgs" />
     </Csc>
 

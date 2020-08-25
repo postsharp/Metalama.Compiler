@@ -731,7 +731,7 @@ namespace Microsoft.CodeAnalysis
         /// <returns>A compilation that represents the original compilation with any additional, generated texts added to it.</returns>
         private protected virtual Compilation RunGenerators(Compilation input, ParseOptions parseOptions, ImmutableArray<ISourceGenerator> generators, AnalyzerConfigOptionsProvider analyzerConfigOptionsProvider, ImmutableArray<AdditionalText> additionalTexts, DiagnosticBag generatorDiagnostics) { return input; }
 
-        private protected virtual Compilation RunTransformers(Compilation input, ImmutableArray<ISourceTransformer> transformers, DiagnosticBag transformerDiagnostics) { return input; }
+        private protected virtual Compilation RunTransformers(Compilation input, ImmutableArray<ISourceTransformer> transformers, AnalyzerConfigOptionsProvider analyzerConfigProvider, DiagnosticBag transformerDiagnostics) { return input; }
 
         private int RunCore(TextWriter consoleOutput, ErrorLogger errorLogger, CancellationToken cancellationToken)
         {
@@ -981,7 +981,7 @@ namespace Microsoft.CodeAnalysis
 
                 if (!transfomers.IsEmpty)
                 {
-                    compilation = RunTransformers(compilation, transfomers, diagnostics);
+                    compilation = RunTransformers(compilation, transfomers, analyzerConfigProvider, diagnostics);
                 }
 
                 AnalyzerOptions analyzerOptions = CreateAnalyzerOptions(

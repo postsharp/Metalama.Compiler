@@ -40,7 +40,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// </value>
         internal bool ShouldIncludeErrorEndLocation { get; set; }
 
-        internal ImmutableArray<(string, string)> RoslynExOptions { get; set; }
+        internal string? RoslynExConfigFile { get; set; }
 
         internal CSharpCommandLineArguments()
         {

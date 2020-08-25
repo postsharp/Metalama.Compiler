@@ -391,22 +391,24 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         internal interface ITransformerConfigScriptRunner
         {
-            ImmutableArray<object> RunConfigScript(ImmutableArray<(string, string)> roslynExOptions);
+            ImmutableArray<object> RunConfigScript(string configFile, AnalyzerConfigOptions options);
         }
 
-        private protected override Compilation RunTransformers(Compilation input, ImmutableArray<ISourceTransformer> transformers, DiagnosticBag diagnostics)
+        private protected override Compilation RunTransformers(Compilation input, ImmutableArray<ISourceTransformer> transformers, AnalyzerConfigOptionsProvider analyzerConfigProvider, DiagnosticBag diagnostics)
         {
-            ImmutableArray<object> RunConfigScript()
+            var configFile = Arguments.RoslynExConfigFile;
+
+            ImmutableArray<object> runConfigScript()
             {
                 // TODO: figure out a better way to break the cyclic dependency?
-                var scriptRunnerType = Assembly.LoadFrom("Microsoft.CodeAnalysis.CSharp.Scripting").GetType("TransformerConfigScriptRunner");
+                var scriptRunnerType = Assembly.LoadFrom("Microsoft.CodeAnalysis.CSharp.Scripting.dll").GetType("RoslynEx.TransformerConfigScriptRunner");
                 var scriptRunner = (ITransformerConfigScriptRunner)Activator.CreateInstance(scriptRunnerType);
 
-                return scriptRunner.RunConfigScript(Arguments.RoslynExOptions);
+                return scriptRunner.RunConfigScript(configFile, analyzerConfigProvider.GlobalOptions);
             }
 
             var compilation = input;
-            var configOptions = RunConfigScript();
+            var configOptions = configFile == null ? ImmutableArray.Create<object>() : runConfigScript();
             foreach (var transformer in transformers)
             {
                 try

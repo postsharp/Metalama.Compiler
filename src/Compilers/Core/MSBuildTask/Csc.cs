@@ -165,16 +165,16 @@ namespace Microsoft.CodeAnalysis.BuildTasks
             get { return (string?)_store[nameof(Nullable)]; }
         }
 
-        public string? RoslynExOptions
+        public string? RoslynExConfigFile
         {
             set
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    _store[nameof(RoslynExOptions)] = value;
+                    _store[nameof(RoslynExConfigFile)] = value;
                 }
             }
-            get { return (string?)_store[nameof(RoslynExOptions)]; }
+            get { return (string?)_store[nameof(RoslynExConfigFile)]; }
         }
 
         #endregion
@@ -235,7 +235,7 @@ namespace Microsoft.CodeAnalysis.BuildTasks
             commandLine.AppendPlusOrMinusSwitch("/highentropyva", _store, nameof(HighEntropyVA));
             commandLine.AppendSwitchIfNotNull("/nullable:", Nullable);
             commandLine.AppendWhenTrue("/nosdkpath", _store, nameof(DisableSdkPath));
-            commandLine.AppendSwitchIfNotNull("/roslynexoptions", RoslynExOptions);
+            commandLine.AppendSwitchIfNotNull("/roslynexconfig:", RoslynExConfigFile);
 
             // If not design time build and the globalSessionGuid property was set then add a -globalsessionguid:<guid>
             bool designTime = false;
