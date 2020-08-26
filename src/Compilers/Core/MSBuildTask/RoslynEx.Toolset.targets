@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <Target Name="CreateRoslynExCsx" BeforeTargets="Compile" DependsOnTargets="ResolveLockFileAnalyzers">
+  <Target Name="CreateRoslynExCsx" BeforeTargets="CoreCompile" DependsOnTargets="ResolveLockFileAnalyzers">
     <ItemGroup>
       <!-- TODO: somehow only reference assemblies with RoslynEx transformations and not all analyzer assemblies? -->
       <RoslynExLine Include="#r &quot;%(Analyzer.Identity)&quot;" />
