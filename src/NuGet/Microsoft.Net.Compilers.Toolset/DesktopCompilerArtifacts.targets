@@ -46,6 +46,7 @@
       <DesktopCompilerArtifact Include="$(ArtifactsBinDir)Microsoft.Build.Tasks.CodeAnalysis\$(Configuration)\net472\Microsoft.Managed.Core.targets"/>
       <DesktopCompilerArtifact Include="$(ArtifactsBinDir)Microsoft.Build.Tasks.CodeAnalysis\$(Configuration)\net472\Microsoft.CSharp.Core.targets"/>
       <DesktopCompilerArtifact Include="$(ArtifactsBinDir)Microsoft.Build.Tasks.CodeAnalysis\$(Configuration)\net472\Microsoft.VisualBasic.Core.targets"/>
+      <DesktopCompilerArtifact Include="$(ArtifactsBinDir)Microsoft.Build.Tasks.CodeAnalysis\$(Configuration)\net472\RoslynEx.Toolset.targets"/>
 
       <!--
         Do not overwrite optimization data of System.Threading.Tasks.Extensions.dll

@@ -42,12 +42,19 @@ namespace RoslynEx
 #endif
         }
 
-        public T GetOptions<T>()
+        public T GetOptions<T>() where T : new()
         {
 #if ROSLYNEX_INTERFACE
             return default;
 #else
             _options.TryGetValue(typeof(T), out var value);
+
+            if (value == null)
+            {
+                value = new T();
+                _options.Add(typeof(T), value);
+            }
+
             return (T)value;
 #endif
         }

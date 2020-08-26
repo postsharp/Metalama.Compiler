@@ -1295,7 +1295,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         case "roslynexconfig":
                             unquoted = RemoveQuotesAndSlashes(value);
-                            ParseGenericPathToFile(unquoted, diagnostics, baseDirectory);
+                            roslynExConfigFile = ParseGenericPathToFile(unquoted, diagnostics, baseDirectory);
                             continue;
 
                         case "-":

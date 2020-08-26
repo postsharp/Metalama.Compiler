@@ -1,1 +1,2 @@
-
+RoslynEx.TransformerConfigScriptGlobals
+RoslynEx.TransformerConfigScriptGlobals.properties.get -> System.Collections.Generic.IReadOnlyDictionary<string, string>
