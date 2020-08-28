@@ -991,8 +991,10 @@ namespace Microsoft.CodeAnalysis
                             if (compilationBefore.ContainsSyntaxTree(tree))
                                 continue;
 
-                            // TODO: make the new path better reflect the old path?
-                            var newTree = tree.WithFilePath(Path.Combine(Guid.NewGuid().ToString(), Path.GetFileName(tree.FilePath)));
+                            var newTree = tree
+                                .WithRootAndOptions(tree.GetRoot().NormalizeWhitespace(), tree.Options)
+                                // TODO: make the new path better reflect the old path?
+                                .WithFilePath(Path.Combine(Guid.NewGuid().ToString(), Path.GetFileName(tree.FilePath)));
 
                             compilation = compilation.ReplaceSyntaxTree(tree, newTree);
 
