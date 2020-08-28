@@ -4,7 +4,8 @@
     <ItemGroup>
       <!-- TODO: somehow only reference assemblies with RoslynEx transformations and not all analyzer assemblies? -->
       <RoslynExLine Include="#r &quot;%(Analyzer.Identity)&quot;" />
-      <RoslynExLine Include="System.Collections.Generic.IReadOnlyDictionary&lt;string, string&gt; Properties = properties%3B" />
+      <RoslynExLine Include="#r &quot;$(_RoslynTasksDirectory)RoslynEx.Configuration.Interface.dll&quot;" />
+      <RoslynExLine Include="RoslynEx.ITransformerProperties Properties = properties%3B" />
     </ItemGroup>
 
     <WriteLinesToFile File="$(BaseIntermediateOutputPath)RoslynEx.csx" Lines="@(RoslynExLine)" Overwrite="true" />

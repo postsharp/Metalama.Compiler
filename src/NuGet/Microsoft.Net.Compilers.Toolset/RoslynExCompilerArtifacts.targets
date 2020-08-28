@@ -3,8 +3,9 @@
 
   <Target Name="InitializeRoslynExCompilerArtifacts">
     <ItemGroup>
-      
+
       <RoslynExCompilerArtifact Include="$(ArtifactsBinDir)RoslynEx.Interface.TypeForwards\$(Configuration)\netstandard2.0\RoslynEx.Interface.dll" />
+      <RoslynExCompilerArtifact Include="$(ArtifactsBinDir)RoslynEx.Configuration.Interface\$(Configuration)\netstandard2.0\RoslynEx.Configuration.Interface.dll" />
 
     </ItemGroup>
   </Target>

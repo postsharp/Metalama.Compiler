@@ -407,8 +407,26 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return scriptRunner.RunConfigScript(configFile, analyzerConfigProvider.GlobalOptions);
             }
 
+            ImmutableArray<object> configOptions;
+            try
+            {
+                configOptions = configFile == null ? ImmutableArray.Create<object>() : runConfigScript();
+            }
+            catch (Exception ex)
+            {
+                // TODO: if ex is CompilationErrorException, propagate its Diagnostics to diagnostics (but cyclic dependendency makes doing that annoying)
+
+                var diagnostic = Diagnostic.Create(
+                    new DiagnosticDescriptor(
+                        "RE002", "Transformer configuration failed", "Executing config file '{0}' failed: {1}", Diagnostic.CompilerDiagnosticCategory, DiagnosticSeverity.Error, true),
+                    location: null, configFile, ex);
+                diagnostics.Add(diagnostic);
+
+                return input;
+            }
+
             var compilation = input;
-            var configOptions = configFile == null ? ImmutableArray.Create<object>() : runConfigScript();
+
             foreach (var transformer in transformers)
             {
                 try

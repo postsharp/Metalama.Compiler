@@ -15,6 +15,7 @@
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\..\Compilers\Core\Portable\Microsoft.CodeAnalysis.csproj" />
     <ProjectReference Include="..\..\Compilers\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.csproj" />
+    <ProjectReference Include="..\..\RoslynEx\RoslynEx.Configuration.Interface\RoslynEx.Configuration.Interface.csproj" />
     <ProjectReference Include="..\Core\Microsoft.CodeAnalysis.Scripting.csproj">
       <Aliases>global,Scripting</Aliases>
     </ProjectReference>

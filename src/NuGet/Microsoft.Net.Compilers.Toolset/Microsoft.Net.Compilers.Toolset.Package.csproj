@@ -30,7 +30,7 @@
     <PreReleaseVersionLabel>poc</PreReleaseVersionLabel>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <OfficialBuild>true</OfficialBuild>
-    <OfficialBuildId>$([System.DateTime]::Now.ToString(yyyyMMdd)).1</OfficialBuildId>
+    <OfficialBuildId>$([System.DateTime]::Now.ToString(yyyyMMdd)).8</OfficialBuildId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,7 +56,9 @@
       <_File Include="@(CoreClrCompilerBuildArtifact)" TargetDir="tasks/netcoreapp3.1" />
       <_File Include="@(CoreClrCompilerToolsArtifact)" TargetDir="tasks/netcoreapp3.1" />
       <_File Include="@(CoreClrCompilerBinArtifact)" TargetDir="tasks/netcoreapp3.1/bincore" />
+      <!-- TODO: RE.I needs to go to bincore and RE.C.I to its parent; for now just copy both files to both directories -->
       <_File Include="@(RoslynExCompilerArtifact)" TargetDir="tasks/netcoreapp3.1/bincore" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
+      <_File Include="@(RoslynExCompilerArtifact)" TargetDir="tasks/netcoreapp3.1" Condition="'$(TargetFramework)' == 'netcoreapp3.1'" />
       <_File Include="@(CoreClrCompilerBinRuntimesArtifact)" TargetDir="tasks/netcoreapp3.1/bincore/runtimes" />
      
       <_File Include="$(MSBuildProjectDirectory)\build\**\*.*" Condition="'$(TargetFramework)' == 'net472'" TargetDir="build" />

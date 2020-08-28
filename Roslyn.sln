@@ -473,6 +473,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoslynEx.Sdk", "src\RoslynE
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RoslynEx.Shared", "src\RoslynEx\RoslynEx.Shared\RoslynEx.Shared.shproj", "{9AC4F471-ED46-4CD9-920F-E50BC6A65DD6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoslynEx.Configuration.Interface", "src\RoslynEx\RoslynEx.Configuration.Interface\RoslynEx.Configuration.Interface.csproj", "{8561B00A-8CDE-4EFC-9C90-696FE74053C6}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Analyzers\VisualBasic\CodeFixes\VisualBasicCodeFixes.projitems*{0141285d-8f6c-42c7-baf3-3c0ccd61c716}*SharedItemsImports = 5
@@ -1231,6 +1233,10 @@ Global
 		{FDADE459-74F3-41C3-8311-C6ECD6EA450D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDADE459-74F3-41C3-8311-C6ECD6EA450D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDADE459-74F3-41C3-8311-C6ECD6EA450D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8561B00A-8CDE-4EFC-9C90-696FE74053C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8561B00A-8CDE-4EFC-9C90-696FE74053C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8561B00A-8CDE-4EFC-9C90-696FE74053C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8561B00A-8CDE-4EFC-9C90-696FE74053C6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1448,6 +1454,7 @@ Global
 		{C832D674-0A77-4839-9667-5DFA47F2A2DB} = {FA7B53B4-F90B-415F-8D64-13F5523EF8A7}
 		{FDADE459-74F3-41C3-8311-C6ECD6EA450D} = {FA7B53B4-F90B-415F-8D64-13F5523EF8A7}
 		{9AC4F471-ED46-4CD9-920F-E50BC6A65DD6} = {FA7B53B4-F90B-415F-8D64-13F5523EF8A7}
+		{8561B00A-8CDE-4EFC-9C90-696FE74053C6} = {FA7B53B4-F90B-415F-8D64-13F5523EF8A7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {604E6B91-7BC0-4126-AE07-D4D2FEFC3D29}
