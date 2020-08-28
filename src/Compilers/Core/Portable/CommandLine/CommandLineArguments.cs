@@ -534,6 +534,8 @@ namespace Microsoft.CodeAnalysis
 
             resolvedReferences.Free();
 
+            transformerBuilder.Sort((t1, t2) => StringComparer.Ordinal.Compare(t1.GetType().FullName, t2.GetType().FullName));
+
             transfomers = transformerBuilder.ToImmutable();
             generators = generatorBuilder.ToImmutable();
             analyzers = analyzerBuilder.ToImmutable();
