@@ -7,15 +7,15 @@ using Microsoft.CodeAnalysis;
 namespace RoslynEx
 {
     /// <summary>
-    /// Context passed to a source transformer when <see cref="ISourceTransformer.Execute(SourceTransformerContext)"/> is called.
+    /// Context passed to a source transformer when <see cref="ISourceTransformer.Execute(TransformerContext)"/> is called.
     /// </summary>
-    public readonly struct SourceTransformerContext
+    public readonly struct TransformerContext
     {
 #if !ROSLYNEX_INTERFACE
         private readonly DiagnosticBag _diagnostics;
         private readonly Dictionary<Type, object> _options;
 
-        internal SourceTransformerContext(Compilation compilation, DiagnosticBag diagnostics, ImmutableArray<object> configOptions)
+        internal TransformerContext(Compilation compilation, DiagnosticBag diagnostics, ImmutableArray<object> configOptions)
         {
             Compilation = compilation;
             _diagnostics = diagnostics;

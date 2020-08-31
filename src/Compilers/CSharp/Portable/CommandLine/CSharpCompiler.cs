@@ -432,7 +432,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 try
                 {
-                    var context = new SourceTransformerContext(compilation, diagnostics, configOptions);
+                    var context = new TransformerContext(compilation, diagnostics, configOptions);
                     compilation = transformer.Execute(context);
                 }
                 catch (Exception ex)
