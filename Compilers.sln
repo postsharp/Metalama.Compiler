@@ -164,7 +164,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoslynEx.Sdk", "src\RoslynE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoslynEx.Interface.TypeForwards", "src\RoslynEx\RoslynEx.Interface.TypeForwards\RoslynEx.Interface.TypeForwards.csproj", "{BDC4CFCA-200F-4BD9-88C0-E75D8577D636}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynEx.Configuration.Interface", "src\RoslynEx\RoslynEx.Configuration.Interface\RoslynEx.Configuration.Interface.csproj", "{97D60855-82FA-4037-A892-773C56508ACF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoslynEx.Configuration.Interface", "src\RoslynEx\RoslynEx.Configuration.Interface\RoslynEx.Configuration.Interface.csproj", "{97D60855-82FA-4037-A892-773C56508ACF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynEx.Generator", "src\RoslynEx\RoslynEx.Generator\RoslynEx.Generator\RoslynEx.Generator.csproj", "{94C22EEA-F3A1-4C9C-8AE0-3289BF0F6D97}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -464,6 +466,10 @@ Global
 		{97D60855-82FA-4037-A892-773C56508ACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97D60855-82FA-4037-A892-773C56508ACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97D60855-82FA-4037-A892-773C56508ACF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94C22EEA-F3A1-4C9C-8AE0-3289BF0F6D97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94C22EEA-F3A1-4C9C-8AE0-3289BF0F6D97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94C22EEA-F3A1-4C9C-8AE0-3289BF0F6D97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94C22EEA-F3A1-4C9C-8AE0-3289BF0F6D97}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -539,6 +545,7 @@ Global
 		{813E74A5-78C0-499E-AE2B-DC133B8A77BF} = {803F2227-6BA8-4593-96B7-37D1CC9F01AC}
 		{BDC4CFCA-200F-4BD9-88C0-E75D8577D636} = {803F2227-6BA8-4593-96B7-37D1CC9F01AC}
 		{97D60855-82FA-4037-A892-773C56508ACF} = {803F2227-6BA8-4593-96B7-37D1CC9F01AC}
+		{94C22EEA-F3A1-4C9C-8AE0-3289BF0F6D97} = {803F2227-6BA8-4593-96B7-37D1CC9F01AC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6F599E08-A9EA-4FAA-897F-5D824B0210E6}

@@ -9,5 +9,13 @@
     </ItemGroup>
 
     <WriteLinesToFile File="$(BaseIntermediateOutputPath)RoslynEx.csx" Lines="@(RoslynExLine)" Overwrite="true" />
+
+    <PropertyGroup>
+      <RoslynEx_Analyzers>@(Analyzer)</RoslynEx_Analyzers>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <CompilerVisibleProperty Include="RoslynEx_Analyzers" />
+    </ItemGroup>
   </Target>
 </Project>

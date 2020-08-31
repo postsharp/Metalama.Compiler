@@ -41,6 +41,12 @@ Microsoft.CodeAnalysis.GeneratorDriverRunResult.GeneratedTrees.get -> System.Col
 Microsoft.CodeAnalysis.GeneratorDriverRunResult.Results.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.GeneratorRunResult>
 Microsoft.CodeAnalysis.SyntaxTreeOptionsProvider
 Microsoft.CodeAnalysis.SyntaxTreeOptionsProvider.SyntaxTreeOptionsProvider() -> void
+RoslynEx.GeneratorContext
+RoslynEx.GeneratorContext.AddSource(string hintName, string source) -> void
+RoslynEx.GeneratorContext.Compilation.get -> Microsoft.CodeAnalysis.Compilation
+RoslynEx.GeneratorContext.ReportDiagnostic(Microsoft.CodeAnalysis.Diagnostic diagnostic) -> void
+RoslynEx.ISourceGenerator
+RoslynEx.ISourceGenerator.Execute(RoslynEx.GeneratorContext context) -> void
 RoslynEx.ISourceTransformer
 RoslynEx.ISourceTransformer.Execute(RoslynEx.TransformerContext context) -> Microsoft.CodeAnalysis.Compilation
 RoslynEx.TransformerContext

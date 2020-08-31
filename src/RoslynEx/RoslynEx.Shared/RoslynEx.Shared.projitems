@@ -9,7 +9,9 @@
     <Import_RootNamespace>RoslynEx</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ISourceGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISourceTransformer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GeneratorContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TransformerContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TransformerAttribute.cs" />
   </ItemGroup>
