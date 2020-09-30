@@ -387,6 +387,11 @@ function TestUsingOptimizedRunner() {
   $args += " -nocache"
   $args += " -tfm:net472"
 
+  $useOpenCover = $true
+  if ($useOpenCover) {
+    $openCoverPath = Join-Path (Get-PackageDir "OpenCover") "tools\OpenCover.Console.exe"
+  }
+
   if ($testDesktop -or $testIOperation) {
     if ($test32) {
       $dlls = Get-ChildItem -Recurse -Include "*.UnitTests.dll" $binDir
@@ -446,8 +451,60 @@ function TestUsingOptimizedRunner() {
     $args += " -sequential"
   }
 
+  $pdb2pdb = Join-Path (Get-PackageDir 'Microsoft.DiaSymReader.Pdb2Pdb') 'tools\Pdb2Pdb.exe'
+  $windowsPdbs = @{}
   foreach ($dll in $dlls) {
-    $args += " $dll"
+      if ($useOpenCover) {
+          $dllPdb = [IO.Path]::ChangeExtension($dll, 'pdb')
+          $dllDirectory = [IO.Path]::GetDirectoryName($dll)
+          if (-not (Test-Path $dllPdb)) {
+              # Extract the portable PDB, then convert to Windows PDB
+              Get-ChildItem $dllDirectory -Filter *.dll | ? { $_.Name -notmatch '^System\.|^SQLitePCLRaw\.|^Mono\.Cecil\.|^vslangproj|^xunit\.|^Microsoft\.VisualStudio\.Shell\.|^Microsoft\.VisualStudio\.Text\.|^Microsoft\.VisualStudio\.TextManager\.|^Microsoft\.DiaSymReader\.' } | ForEach-Object {
+                  $intermediatePdb = [IO.Path]::ChangeExtension($_.FullName, 'ppdb')
+                  $outputPdb = [IO.Path]::ChangeExtension($_.FullName, 'pdb')
+                  if ($windowsPdbs.ContainsKey($_.Name)) {
+                      $previousOutput = $windowsPdbs[$_.Name]
+                      if ((Test-Path $previousOutput) -and -not (Test-Path $outputPdb)) {
+                          Copy-Item $previousOutput $outputPdb
+                      }
+                  }
+                  else {
+                      $windowsPdbs.Add($_.Name, $outputPdb)
+                      &$pdb2pdb $_.FullName /out $intermediatePdb /extract
+                      if (Test-Path $intermediatePdb) {
+                          &$pdb2pdb $_.FullName /pdb $intermediatePdb /out $outputPdb
+                      }
+                  }
+              }
+          }
+      }
+
+      $args += " $dll"
+  }
+
+  if ($useOpenCover) {
+      Write-Output "Running OpenCover, writing to $testResultsDir"
+
+      $null = mkdir -f $testResultsDir
+
+      # Wrap the call to RunTests.exe in a call to OpenCover.Console.exe
+      $rewrittenArgs = @(
+          '-register:user'
+          '-threshold:1'
+          '-oldStyle'
+          '-returntargetcode'
+          '-hideskipped:All'
+          '-filter:"+[*]Microsoft.CodeAnalysis.Editor.* -[*.UnitTests]*"'
+          '-excludebyattribute:*.ExcludeFromCodeCoverage*'
+          '-excludebyfile:*\*Designer.cs'
+          '-mergebyhash'
+          "-output:$testResultsDir\RunTests.OpenCover.coverage"
+          "-target:`"$runTests`""
+          "-targetargs:`"$args`""
+      )
+
+      $runTests = $openCoverPath
+      $args = $rewrittenArgs
   }
 
   try {

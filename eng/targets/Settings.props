@@ -219,4 +219,8 @@
     <DefineConstants Condition="'$(DefineConstants)' != ''">DOTNET_BUILD_FROM_SOURCE;$(DefineConstants)</DefineConstants>
     <DefineConstants Condition="'$(DefineConstants)' == ''">DOTNET_BUILD_FROM_SOURCE</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenCover" Version="$(OpenCoverVersion)" ExcludeAssets="all" />
+  </ItemGroup>
 </Project>
