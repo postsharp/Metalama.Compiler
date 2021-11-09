@@ -82,7 +82,7 @@ namespace Caravela.Compiler
                 {
                     continue;
                 }
-                
+
                 if (transformation.OldTree != null)
                 {
                     TrackTreeReplacement(transformation.OldTree, transformation.NewTree);
