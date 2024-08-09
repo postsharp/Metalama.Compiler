@@ -6,6 +6,7 @@ Imports System.IO
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.Editor.Shared.Utilities
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
+Imports Microsoft.CodeAnalysis.ProjectSystem
 Imports Microsoft.CodeAnalysis.Shared.TestHooks
 Imports Microsoft.CodeAnalysis.Test.Utilities
 Imports Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
@@ -29,6 +30,36 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.ProjectSystemShim
         Private Sub Dispose() Implements IDisposable.Dispose
             Directory.Delete(_tempPath, recursive:=True)
         End Sub
+
+        <WpfFact>
+        Public Async Function FileChangeWatcher() As Task
+            Using workspace = New EditorTestWorkspace()
+                Dim fileChangeService = New MockVsFileChangeEx
+                Dim fileChangeWatcher = New FileChangeWatcher(workspace.GetService(Of IAsynchronousOperationListenerProvider)(), Task.FromResult(Of IVsAsyncFileChangeEx2)(fileChangeService))
+
+                Dim context1 = fileChangeWatcher.CreateContext()
+                Dim context2 = fileChangeWatcher.CreateContext()
+
+                Dim handler1Called As Boolean = False
+                Dim handler2Called As Boolean = False
+
+                AddHandler context1.FileChanged, Sub(sender, args) handler1Called = True
+                AddHandler context2.FileChanged, Sub(sender, args) handler2Called = True
+
+                Dim watchedFile1 = context1.EnqueueWatchingFile("file1.txt")
+                Dim watchedFile2 = context2.EnqueueWatchingFile("file2.txt")
+
+                ' TODO: somehow properly watch for the watcher processing to complete?
+
+                Await Task.Delay(10)
+
+                fileChangeService.FireUpdate("file2.txt")
+
+                Assert.False(handler1Called)
+                Assert.True(handler2Called)
+
+            End Using
+        End Function
 
         <WpfFact>
         Public Async Function SingleFile() As Task
