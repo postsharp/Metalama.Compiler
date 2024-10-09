@@ -42,6 +42,9 @@
 
   <!-- based on https://claires.site/2018/07/03/create-and-pack-reference-assemblies/ -->
   <Target Name="_GetReferenceAssemblies" DependsOnTargets="Build" Returns="@(ReferenceAssembliesOutput)">
+    <Error Text="IS OFFICIAL ($(OfficialBuild))" Condition="'$(OfficialBuild)'=='true'" />
+    <Error Text="IS NOT OFFICIAL ($(OfficialBuild))" Condition="'$(OfficialBuild)'!='true'" />
+
     <ItemGroup>
       <ReferenceAssembliesOutput Include="@(IntermediateRefAssembly->'%(FullPath)')" TargetFramework="$(TargetFramework)" />
       <ReferenceAssembliesOutput Include="@(DocumentationProjectOutputGroupOutput->'%(FullPath)')" TargetFramework="$(TargetFramework)" />
