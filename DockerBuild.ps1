@@ -71,6 +71,12 @@
 .PARAMETER RegistryImage
     Use a pre-built image from a registry, skipping Dockerfile build entirely.
 
+.PARAMETER NoRegistry
+    Ignore DOCKER_REGISTRY, DOCKER_USERNAME and DOCKER_PASSWORD, and build every image locally under a local
+    tag: no authentication, no pull of an ancestor image, no push of what is built. Use it on a host that
+    cannot reach the registry, or cannot verify its certificate, so that the build proceeds without the layer
+    reuse the registry would otherwise give it.
+
 .PARAMETER NoInit
     Do not generate or call Init.g.ps1 (skips environment variables, git config, safe.directory, etc).
 
@@ -147,6 +153,7 @@ param(
     [string]$Script = 'Build.ps1', # The build script to be executed inside Docker.
     [string]$Dockerfile, # Path to custom Dockerfile (defaults to Dockerfile or Dockerfile.claude based on -Claude).
     [string]$RegistryImage, # Use a pre-built image from a registry, skipping Dockerfile build entirely.
+    [switch]$NoRegistry, # Ignore DOCKER_REGISTRY and its credentials; build locally without pulling or pushing.
     [switch]$NoInit, # Do not generate or call Init.g.ps1 (skips git config, safe.directory, etc).
     [string]$Isolation = 'process', # Docker isolation mode (process or hyperv). When not specified, defaults to hyperv on Windows Desktop and process on Windows Server. Memory/CPU limits only apply to hyperv.
     [string]$Memory = $(if ($env:BuildAgentMemory) { "${env:BuildAgentMemory}g" } else { '24g' }), # Docker memory limit (e.g., "8g"). Only used with hyperv isolation. Defaults to $env:BuildAgentMemory (in GB) or 24g.
@@ -1019,6 +1026,48 @@ RUN if [ -n "`$MOUNTPOINTS" ]; then \
         $script:RegistryPushJobs = @()
     }
 
+    # The processor architecture of the Docker engine, in the naming Docker itself uses ('amd64', 'arm64').
+    # It is the architecture of the OS image a mirror ends up holding, because `docker pull` of a
+    # multi-architecture manifest selects the engine's own platform.
+    #
+    # The engine is asked rather than the host, because the two differ on macOS: the engine runs in a Linux
+    # virtual machine (Docker Desktop, Colima, Rancher Desktop), and the images are of the virtual machine's
+    # architecture, not of the architecture the PowerShell process happens to run under. Queried once per run.
+    function Get-DockerArchitecture
+    {
+        if ($script:DockerArchitecture)
+        {
+            return $script:DockerArchitecture
+        }
+
+        # '{{.Server.Arch}}' is the daemon's own Go architecture name, the same vocabulary an image manifest
+        # uses. `docker info --format '{{.Architecture}}'` is not interchangeable with it: that one reports the
+        # uname form, 'x86_64' rather than 'amd64', which is why the result is normalized below.
+        $architecture = (docker version --format '{{.Server.Arch}}' 2>$null | Select-Object -Last 1)
+
+        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($architecture))
+        {
+            # The daemon could not be asked: it is not running, or on Linux the user is not in the docker
+            # group. The host architecture is the next best answer, and is the right one wherever the daemon
+            # runs on the host itself, which covers Linux and Windows.
+            $architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+            Write-Host "Could not read the Docker engine architecture; assuming the host's, $architecture." -ForegroundColor Yellow
+        }
+
+        $architecture = $architecture.Trim()
+
+        # Accept every spelling the two sources above can produce, including the .NET enum names ('X64',
+        # 'Arm64') that the fallback returns.
+        $script:DockerArchitecture = switch -Regex ($architecture)
+        {
+            '^(amd64|x64|x86_64)$' { 'amd64' }
+            '^(arm64|aarch64)$' { 'arm64' }
+            default { $architecture.ToLowerInvariant() }
+        }
+
+        return $script:DockerArchitecture
+    }
+
     # Resolve the OS image a root image is built FROM, mirroring it into the configured registry the first time
     # it is needed. On a fresh agent the OS image is the most expensive download of the whole build, and the
     # registry is on the LAN, so building from the mirror replaces an internet transfer with a local one.
@@ -1054,7 +1103,22 @@ RUN if [ -n "`$MOUNTPOINTS" ]; then \
             $segments = $segments[1..($segments.Length - 1)]
         }
 
-        $mirrorRepository = "$dockerRegistry/$( $segments -join '-' )"
+        # A repository holds one manifest per tag, and the mirror is single-platform: whichever agent creates
+        # it decides the architecture every later agent gets, with no error until a command runs in a
+        # container built from it. So the architecture belongs in the mirror name. amd64 keeps the unsuffixed
+        # name, which every mirror already in the registry was pushed under:
+        #   amd64 -> <registry>/ubuntu, arm64 -> <registry>/ubuntu-arm64.
+        $architecture = Get-DockerArchitecture
+        $architectureSuffix = if ($architecture -eq 'amd64')
+        {
+            ''
+        }
+        else
+        {
+            "-$architecture"
+        }
+
+        $mirrorRepository = "$dockerRegistry/$( $segments -join '-' )$architectureSuffix"
         $mirror = [pscustomobject]@{ Repository = $mirrorRepository; Reference = "${mirrorRepository}:${tag}" }
 
         docker @dockerConfigArg manifest inspect $mirror.Reference *> $null
@@ -1175,6 +1239,9 @@ RUN if [ -n "`$MOUNTPOINTS" ]; then \
     # Get-OsImage.
     $script:OsImages = @{ }
 
+    # The Docker engine architecture, resolved on first use by Get-DockerArchitecture.
+    $script:DockerArchitecture = $null
+
     # Tags already handed to Start-AsyncPush, so that resolving the same image twice (the run step resolves the
     # chain again) does not push it twice.
     $script:PushedTags = [System.Collections.Generic.HashSet[string]]::new( [StringComparer]::Ordinal )
@@ -1282,7 +1349,17 @@ RUN if [ -n "`$MOUNTPOINTS" ]; then \
 
         # Resolve the Docker registry for build images (env-based). Registry mode is off (local image tags) if
         # not set. Set before Resolve-ImageTag, which uses it to form the tag.
-        $dockerRegistry = $env:DOCKER_REGISTRY
+        # -NoRegistry suppresses the environment, which is how a host that cannot reach or verify the registry
+        # still builds: the cost is that it builds every layer itself instead of pulling the ones already made.
+        if ($NoRegistry)
+        {
+            Write-Host "Registry disabled by -NoRegistry; building images locally." -ForegroundColor Yellow
+            $dockerRegistry = $null
+        }
+        else
+        {
+            $dockerRegistry = $env:DOCKER_REGISTRY
+        }
 
         # Compute the target image tag (and, transitively, its ancestors' tags via ARG BASE_IMAGE). The image
         # name is the Dockerfile stem; the tag is its content hash (folding the parent tag, OS and day-stamp).
@@ -1957,9 +2034,12 @@ RUN if [ -n "`$MOUNTPOINTS" ]; then \
         {
             if ($dir)
             {
-                # Normalize path: convert backslashes to forward slashes, add trailing slash
-                $normalizedDir = ($dir -replace '\\', '/').TrimEnd('/') + '/'
+                # Git compares safe.directory against the repository path exactly, and the path it reports has
+                # no trailing separator: registering only the trailing-slash form leaves the exception unmatched
+                # and the repository still refused as dubiously owned. Register both forms.
+                $normalizedDir = ($dir -replace '\\', '/').TrimEnd('/')
                 $gitConfigCommands += "git config --global --add safe.directory '$normalizedDir'`n"
+                $gitConfigCommands += "git config --global --add safe.directory '$normalizedDir/'`n"
             }
         }
 
@@ -2276,7 +2356,16 @@ $envVarAssignments$gitConfigCommands$postInitCommands
             {
                 $scriptFullPath = Join-Path $ContainerSourceDir $Script
             }
-            $scriptInvocation = "& '$scriptFullPath'"
+            # Fail if the script is not there. In -Command mode `& <missing>` is a non-terminating error and
+            # leaves $LASTEXITCODE at 0, so without this guard the container exits 0 and the build is reported
+            # successful having run nothing at all. That is what an unmounted workspace looks like: the bind
+            # mount silently yields an empty directory when the engine is not allowed to share the host path.
+            $missingScriptMessage = "The script $scriptFullPath is not present in the container. The workspace " +
+                "is most likely not mounted -- check that the agent work directory is a path the container " +
+                "engine is allowed to share."
+
+            $scriptInvocation = "if ( -not ( Test-Path -LiteralPath '$scriptFullPath' ) ) " +
+                "{ Write-Host '$missingScriptMessage' -ForegroundColor Red; exit 127 }; & '$scriptFullPath'"
             $inlineScript = "${substCommandsInline}${initCall}cd '$SourceDirName'; $scriptInvocation $buildArgsString; $pwshExitCommand"
 
             # No environment args for normal build
