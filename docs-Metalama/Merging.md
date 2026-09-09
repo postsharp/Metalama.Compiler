@@ -176,9 +176,9 @@ curl.exe -s -o NUL -D - https://proget.postsharp.net/nuget/roslyn-consolidated/v
 ```
 
 The allow-list is namespace-level, so one entry covers a whole package family. See the infrastructure
-repository under `build/package-feeds.md`, which holds the list and the procedure. The 2026-08 merge needed
-`microsoft.webtools` added for the Razor test projects, and the 5.11 merge needs `maestro` and
-`microsoft.dnceng` for `src/Tools/dotnet-roslyn-tools`, which upstream added on `release/insiders`.
+repository under `build/package-feeds.md`, which holds the list and the procedure. Two merges have needed an
+entry: `microsoft.webtools` in 2026-08 for the Razor test projects, and `maestro` plus `microsoft.dnceng` on
+2026-09-09 for `src/Tools/dotnet-roslyn-tools`, which upstream added on `release/insiders`.
 
 ## 1. Identify the target branch
 
