@@ -2,8 +2,11 @@
 
 ## What we track: the .NET SDK, not Visual Studio
 
-**Metalama.Compiler must keep up with the Roslyn version bundled in the latest GA .NET SDK.** That is the
-version our users actually get, and it is the only signal that matters when deciding whether a merge is due.
+**Metalama.Compiler must keep up with the Roslyn version bundled in the latest released .NET SDK.** That is
+the version our users actually get, and it is the only signal that matters when deciding whether a merge is
+due. Which SDK counts as the latest depends on the Metalama version line: a stable line counts only the GA
+SDK, while the preview line also counts a preview or a release candidate. See
+[Which SDK a Metalama version line follows](#which-sdk-a-metalama-version-line-follows).
 
 The reason is the analyzers shipped inside the SDK. Analyzers such as `Microsoft.CodeAnalysis.Razor.Compiler.dll`
 are compiled against the Roslyn of their SDK; when Metalama Compiler bundles an older Roslyn, it cannot load
@@ -38,17 +41,18 @@ Roslyn version has that shape:
 
 | upstream branch | version produced | ships in |
 |---|---|---|
+| `upstream/release/insiders` | `5.11.0-1.*` | .NET SDK 11.0.100-rc.1 |
 | `upstream/release/stable` | `5.10.0-1.*` | .NET SDK 11.0.100-preview.7 |
-| `upstream/release/insiders` | `5.11.0-1.*` | no released SDK yet |
 | `upstream/release/10.0.4xx` | `5.9.0-1.*` | .NET SDK 10.0.400 (GA) |
 | `upstream/release/10.0.3xx` | `5.6.0-2.*` | .NET SDK 10.0.302 |
-| `upstream/main` | — | never merge |
+| `upstream/main` | `5.12.0-1.*` | never merge |
 
-**The branch names do not pin a version — the branches rotate.** `release/stable` produced `5.9.0` while it
-fed the .NET 10 GA SDK; once the .NET 11 previews started it was snapped to `5.10.0`, the `5.9.0` line moved to
-the band branch `release/10.0.4xx`, and `release/insiders` moved on to `5.11.0`. The table above is a snapshot
-taken on 2026-08-31. Re-derive it from `eng/Versions.props` on each branch every time rather than trusting the
-row.
+**The branch names do not pin a version — the branches rotate, and `release/stable` is not always the branch
+of the newest released SDK.** `release/stable` produced `5.9.0` while it fed the .NET 10 GA SDK; once the
+.NET 11 previews started it was snapped to `5.10.0` and the `5.9.0` line moved to the band branch
+`release/10.0.4xx`. .NET 11 RC 1 then broke the pattern: it was built from `release/insiders`, which produces
+`5.11.0`, while `release/stable` stayed on `5.10.0`. The table above is a snapshot taken on 2026-09-09.
+Re-derive it from `eng/Versions.props` on each branch every time rather than trusting the row.
 
 The mapping is verifiable, not guesswork: `eng-Metalama/DownloadNetSdkAnalyzers/net-sdk-releases.json`
 records the Roslyn version of each .NET SDK it lists, and the same value is in the product version of
@@ -58,18 +62,58 @@ That file lists only the **primary SDK of each .NET release**, not every SDK ban
 `10.0.400` but neither `10.0.110` nor `10.0.111`. Treat it as a lookup table for the bands it covers, and read
 the product version of the installed `Microsoft.CodeAnalysis.dll` when a specific SDK is not in it.
 
-**Normally the right source is `upstream/release/stable`.** Merge from the branch tip, which carries the
-latest servicing fixes for that line.
+### Deriving the branch of a released SDK
 
-`release/stable` is the branch of the newest *released* SDK, which during a .NET preview cycle is a preview
-SDK rather than the GA one. Choosing between it and the GA band branch is a product decision, not a mechanical
-one:
+The SDK does not record a Roslyn commit, and the branch cannot be read off the Roslyn version alone. The
+chain runs through `dotnet/dotnet`, the virtual monolithic repository the SDK is built from, which carries a
+tag for every SDK build:
 
-- **`release/stable`** when the goal is to support the current .NET preview SDK — for instance a `LAMA0617`
-  raised against a preview SDK, as in issue #206.
-- **the band branch of the GA SDK** (`release/10.0.4xx` as of 2026-08) when the goal is to stay on GA.
-- **`release/insiders`** only to get ahead of every released SDK. It produces a version that no SDK ships yet,
-  so nothing can validate the result end to end.
+1. Read `src/source-manifest.json` at the `dotnet/dotnet` tag `v<sdk-version>`. Its `roslyn` entry gives the
+   `dotnet/roslyn` commit that this exact SDK was built from.
+2. Ask git which branch holds that commit.
+
+```powershell
+# Step 1 is a plain file read, for example for SDK 11.0.100-rc.1.26425.128:
+#   https://raw.githubusercontent.com/dotnet/dotnet/v11.0.100-rc.1.26425.128/src/source-manifest.json
+
+# Step 2, in this repository:
+git fetch upstream
+git branch -r --contains <roslyn-commit> | Select-String "upstream/(release|main)"
+```
+
+For .NET 11 RC 1 the chain is SDK `11.0.100-rc.1.26425.128` → `dotnet/dotnet`
+`3551975be08744f0418857c5bed8ab1545c5dd47` → Roslyn `0280f7f9457d50a46cd523ce0082807b5d70b236`, which is on
+`upstream/release/insiders` and on `upstream/main`, and on no other upstream branch.
+
+Do not derive the Roslyn version from `eng/Version.Details.xml` of `dotnet/sdk`. That file records the
+dependency flow, not the build: the version it pins is older than the one the SDK ships, because the virtual
+monolithic repository rebuilds Roslyn and stamps it with its own build number. SDK
+`11.0.100-preview.7.26381.103` pins `5.10.0-1.26363.117` there and ships `5.10.0-1.26381.103`. The version an
+SDK ships is the product version of
+`C:\Program Files\dotnet\sdk\<version>\Roslyn\bincore\Microsoft.CodeAnalysis.dll`, and its build number
+is that of the SDK.
+
+### Which SDK a Metalama version line follows
+
+**The rule differs between the preview line and the stable lines.** Merge from the branch tip in either case,
+because the tip carries the latest servicing fixes for that line.
+
+- **The preview line follows the newest released .NET SDK, even a preview or a release candidate.** This is
+  the rule for `develop/2027.0` for as long as Metalama 2027.0 is itself in preview. The point of the preview
+  line is that Metalama supports a new .NET SDK on the day it ships, and the cost of bundling a Roslyn that
+  has no stable counterpart is acceptable there. The source branch is whichever one the derivation above
+  names: `release/insiders` for .NET 11 RC 1, `release/stable` for SDK `11.0.100-preview.7` before it.
+- **A stable line follows a stable Roslyn branch: the branch of the GA SDK.** This is the rule for
+  `develop/2026.1`, which stays on the Roslyn of the GA .NET SDK (`release/10.0.4xx`, Roslyn `5.9.0`,
+  SDK `10.0.400` as of 2026-09). A stable line never takes a preview or release candidate band, because the
+  version it would bundle is one that no GA SDK ships and that nuget.org never publishes.
+
+The rule follows the Metalama version line, not the calendar. When Metalama 2027.0 stops being a preview, its
+branch stops following preview SDKs and moves to the Roslyn of the GA SDK of the day; issue
+[#215](https://github.com/metalama/Metalama.Compiler/issues/215) is that move.
+
+A `LAMA0617` decides the urgency, not the branch: raised against a preview SDK it is work for the preview
+line, and raised against the GA SDK it is work for the stable line.
 
 Confirm which SDK a branch actually feeds rather than inferring it from the branch name:
 
@@ -82,10 +126,19 @@ Invoke-RestMethod https://builds.dotnet.microsoft.com/dotnet/release-metadata/11
 Then cross-check that SDK's Roslyn version against
 `eng-Metalama/DownloadNetSdkAnalyzers/net-sdk-releases.json` and against the branch's `eng/Versions.props`.
 
-Note that these branches are not ancestors of each other; `release/stable` and `release/10.0.3xx` fork from a
-common point, so consecutive merges are not always a straight line. Check
-`git merge-base develop/YYYY.N upstream/release/stable` before starting: if it is the commit of the previous
-merge, the merge is a clean single hop.
+Note that these branches are not ancestors of each other. `release/stable`, `release/insiders` and the band
+branches fork from a common point, so consecutive merges are not always a straight line, and a merge that
+changes branch is never one. Check the merge base before starting:
+
+```powershell
+git merge-base develop/YYYY.N upstream/<branch>
+```
+
+If it is the upstream parent of the previous merge, the merge is a clean single hop. If it is older, the range
+also contains work that is already on the Metalama branch, brought in from the other upstream branch, and
+every change that reached the two branches as two different commits is presented as a conflict. The 5.11 merge
+of issue [#216](https://github.com/metalama/Metalama.Compiler/issues/216) was such a case: the previous merge
+took the tip of `release/stable`, which is not an ancestor of `release/insiders`.
 
 ## NuGet package sources
 
@@ -105,12 +158,14 @@ test projects; see the infrastructure repository under `build/package-feeds.md`.
 
 ## 1. Identify the target branch
 
-Follow the [source selection policy](#source-selection-policy) above: find the Roslyn version of the latest GA
-.NET SDK, then the upstream branch that produces it.
+Follow the [source selection policy](#source-selection-policy) above: find the SDK that the branch being
+merged into has to follow, then the upstream branch that produces its Roslyn.
 
 ```powershell
 git fetch upstream
-git show upstream/release/stable:eng/Versions.props | Select-String "MajorVersion|MinorVersion|PreReleaseVersionLabel"
+# Repeat for each candidate branch: release/stable, release/insiders, the band branches, main.
+git show upstream/release/insiders:eng/Versions.props |
+    Select-String "<MajorVersion>|<MinorVersion>|<PreReleaseVersionLabel>"
 ```
 
 ## 2. Merge the selected Roslyn branch to Metalama.Compiler repo
