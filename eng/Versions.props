@@ -20,11 +20,11 @@
 --> 
   <PropertyGroup>
     <!-- <Metalama> -->
-    <RoslynVersion>5.10.0</RoslynVersion>
+    <RoslynVersion>5.11.0</RoslynVersion>
     <!-- The Roslyn version must be changed above.
 
     <MajorVersion>5</MajorVersion>
-    <MinorVersion>10</MinorVersion>
+    <MinorVersion>11</MinorVersion>
     <PatchVersion>0</PatchVersion>
 
     -->
@@ -65,8 +65,8 @@
 
   <!-- Razor tooling version -->
   <PropertyGroup>
-    <RazorVsixVersionPrefix>18.10.1</RazorVsixVersionPrefix>
-    <RazorAddinMajorVersion>18.10</RazorAddinMajorVersion>
+    <RazorVsixVersionPrefix>18.11.1</RazorVsixVersionPrefix>
+    <RazorAddinMajorVersion>18.11</RazorAddinMajorVersion>
     <RazorAddinVersion>$(RazorAddinMajorVersion)</RazorAddinVersion>
     <RazorAddinVersion Condition="'$(OfficialBuildId)' != ''">$(RazorAddinVersion).$(OfficialBuildId)</RazorAddinVersion>
     <RazorAddinVersion Condition="'$(OfficialBuildId)' == ''">$(RazorAddinVersion).42424242.42</RazorAddinVersion>
@@ -83,8 +83,8 @@
     <SystemMemoryVersion>4.6.3</SystemMemoryVersion>
     <SystemNumericsVectorsVersion>4.6.1</SystemNumericsVectorsVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.1.2</SystemRuntimeCompilerServicesUnsafeVersion>
-    <SystemSecurityCryptographyPkcsVersion>10.0.8</SystemSecurityCryptographyPkcsVersion>
-    <SystemSecurityCryptographyXmlVersion>10.0.8</SystemSecurityCryptographyXmlVersion>
+    <SystemSecurityCryptographyPkcsVersion>10.0.10</SystemSecurityCryptographyPkcsVersion>
+    <SystemSecurityCryptographyXmlVersion>10.0.10</SystemSecurityCryptographyXmlVersion>
     <SystemThreadingTasksExtensionsVersion>4.6.3</SystemThreadingTasksExtensionsVersion>
     <SystemValueTupleVersion>4.6.2</SystemValueTupleVersion>
   </PropertyGroup>
@@ -94,8 +94,8 @@
     <SystemMemoryVersion>4.6.3</SystemMemoryVersion>
     <SystemNumericsVectorsVersion>4.6.1</SystemNumericsVectorsVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.1.2</SystemRuntimeCompilerServicesUnsafeVersion>
-    <SystemSecurityCryptographyPkcsVersion>10.0.8</SystemSecurityCryptographyPkcsVersion>
-    <SystemSecurityCryptographyXmlVersion>10.0.8</SystemSecurityCryptographyXmlVersion>
+    <SystemSecurityCryptographyPkcsVersion>10.0.10</SystemSecurityCryptographyPkcsVersion>
+    <SystemSecurityCryptographyXmlVersion>10.0.10</SystemSecurityCryptographyXmlVersion>
     <SystemThreadingTasksExtensionsVersion>4.6.3</SystemThreadingTasksExtensionsVersion>
     <SystemValueTupleVersion>4.6.2</SystemValueTupleVersion>
   </PropertyGroup>

@@ -1049,6 +1049,7 @@ namespace Microsoft.CodeAnalysis
                     return cachedExitCode.Value;
                 }
 
+                OnCompilationStarted();
                 CompileAndEmit(
                     touchedFilesLogger,
                     ref compilation,
@@ -1100,6 +1101,8 @@ namespace Microsoft.CodeAnalysis
                 {
                     ReportIVTInfos(consoleOutput, errorLogger, compilation, diagnostics.ToReadOnly());
                 }
+
+                OnCompilationCompleted(exitCode == Succeeded);
 
                 if (exitCode == Succeeded)
                 {
@@ -2616,6 +2619,20 @@ namespace Microsoft.CodeAnalysis
         {
             cacheState = null;
             return null;
+        }
+
+        /// <summary>
+        /// Notifies the compiler that compilation and emit are about to begin.
+        /// </summary>
+        protected virtual void OnCompilationStarted()
+        {
+        }
+
+        /// <summary>
+        /// Notifies the compiler that compilation and emit have completed.
+        /// </summary>
+        protected virtual void OnCompilationCompleted(bool succeeded)
+        {
         }
 
         /// <summary>

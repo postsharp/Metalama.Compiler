@@ -8,13 +8,19 @@ file only sequences the decision. Read `CLAUDE.md` too, and respect it *STRICTLY
 
 ## 1. Decide whether a merge is due
 
-A merge is due when **the Roslyn version bundled in the latest GA .NET SDK is newer than the one this
-repository bundles**. Nothing else — not new commits on the upstream branch, not a new Visual Studio release.
+A merge is due when **the Roslyn version bundled in the newest release of the tracked .NET SDK major version
+is newer than the one this repository bundles**. Nothing else — not new commits on the upstream branch, not a
+new Visual Studio release.
 
 1. Read `<RoslynVersion>` from `eng/Versions.props`. That is what this repository bundles.
-2. Fetch `https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json` and take the
-   channel whose `support-phase` is `active`. Its `latest-sdk` is the current GA SDK.
-3. Find the Roslyn version of that SDK. `eng-Metalama/DownloadNetSdkAnalyzers/net-sdk-releases.json` maps SDK
+2. Read the .NET SDK major version that the current branch tracks, from the table in the source selection
+   policy of `docs-Metalama/Merging.md`. It is a property of the branch and it never changes: this branch
+   tracks one major version and no other.
+3. Fetch `https://builds.dotnet.microsoft.com/dotnet/release-metadata/<major>.0/releases.json` for that major
+   version and take its `latest-sdk`. Take it whatever its `support-phase` is: a `preview` and a `go-live`
+   release count exactly as an `active` one does. Do not read `releases-index.json` and do not select a
+   channel by support phase.
+4. Find the Roslyn version of that SDK. `eng-Metalama/DownloadNetSdkAnalyzers/net-sdk-releases.json` maps SDK
    versions to Roslyn versions, but it lists only the primary SDK of each release, so it may not have the one
    in question. When it does not, run the tool, which downloads and reads the SDK itself:
 
@@ -22,13 +28,16 @@ repository bundles**. Nothing else — not new commits on the upstream branch, n
    dotnet run --project eng-Metalama\DownloadNetSdkAnalyzers <RoslynVersion> -sdk-version
    ```
 
-   That prints the newest SDK whose Roslyn is at most `<RoslynVersion>`. If it prints the current GA SDK, the
-   bundled Roslyn is current.
-4. Compare feature bands carefully. Different bands of the same .NET version carry very different Roslyn
-   versions — SDK 10.0.111 carries Roslyn 5.0, SDK 10.0.400 carries 5.9. Compare against the GA band, not the
-   newest patch of an older band.
+   That prints the newest SDK whose Roslyn is at most `<RoslynVersion>`. If it prints the SDK found in step 3,
+   the bundled Roslyn is current. Note that the tool considers a pre-release SDK only when the version passed
+   to it is itself a pre-release, and `<RoslynVersion>` never is, so it cannot confirm a preview or release
+   candidate SDK. For those, read the Roslyn version out of
+   `eng-Metalama/DownloadNetSdkAnalyzers/net-sdk-releases.json`, which does list them.
+5. Compare feature bands carefully. Different bands of the same .NET version carry very different Roslyn
+   versions — SDK 10.0.111 carries Roslyn 5.0, SDK 10.0.400 carries 5.9. Compare against the band of the SDK
+   found in step 3, not the newest patch of an older band.
 
-**If the bundled Roslyn is not older than the GA SDK's, stop.** Report "no merge due", with both versions.
+**If the bundled Roslyn is not older than that SDK's, stop.** Report "no merge due", with both versions.
 This is the expected outcome on almost every run.
 
 ## 2. Check whether the merge is already in flight
@@ -55,13 +64,15 @@ Only reach this step when a merge is due and nothing is in flight.
 Follow `docs-Metalama/Merging.md` from step 1 through step 6, and the repository's pull request conventions.
 In particular:
 
-- Merge from the **branch tip** of the upstream branch that produces the GA SDK's Roslyn version, never from
-  an arbitrary commit.
+- Merge from the **branch tip** of the upstream branch that holds the Roslyn commit of the SDK found in
+  section 1, never from an arbitrary commit. `Merging.md` gives the derivation, which runs through the
+  `dotnet/dotnet` tag of that SDK.
 - Resolve conflicts according to the table in `Merging.md` §2. Every Metalama change to a Roslyn file is
   delimited by `<Metalama>` markers and states why it diverges; preserve them, and mark new divergences the
   same way with a justification.
 - Update `RoslynVersion`, regenerate generated sources, and match the build agent SDK to `global.json`.
-- Target `develop/2026.1`, and follow the repository's pull request conventions for linking and assignment.
+- Target the development branch this job runs on, which is the branch that tracks the major version of
+  section 1. Follow the repository's pull request conventions for linking and assignment.
 
 ### Milestone
 
