@@ -2,10 +2,11 @@
 
 ## What we track: the .NET SDK, not Visual Studio
 
-**Metalama.Compiler must keep up with the Roslyn version bundled in the latest released .NET SDK.** That is
-the version our users actually get, and it is the only signal that matters when deciding whether a merge is
-due. Which SDK counts as the latest depends on the Metalama version line: a stable line counts only the GA
-SDK, while the preview line also counts a preview or a release candidate. See
+**Metalama.Compiler must keep up with the Roslyn version bundled in the newest release of the .NET SDK major
+version that the branch tracks.** That is the version our users actually get, and it is the only signal that
+matters when deciding whether a merge is due. The major version is fixed per Metalama version line
+(`develop/2027.0` tracks .NET 11), and the maturity of the release is not a criterion: a preview and a release
+candidate count as much as a general availability release. See
 [Which SDK a Metalama version line follows](#which-sdk-a-metalama-version-line-follows).
 
 The reason is the analyzers shipped inside the SDK. Analyzers such as `Microsoft.CodeAnalysis.Razor.Compiler.dll`
@@ -95,33 +96,47 @@ is that of the SDK.
 
 ### Which SDK a Metalama version line follows
 
-**The rule differs between the preview line and the stable lines.** Merge from the branch tip in either case,
-because the tip carries the latest servicing fixes for that line.
+**Each Metalama version line tracks one .NET SDK major version.** That major version is the primary datum of
+the whole procedure; everything else is derived from it.
 
-- **The preview line follows the newest released .NET SDK, even a preview or a release candidate.** This is
-  the rule for `develop/2027.0` for as long as Metalama 2027.0 is itself in preview. The point of the preview
-  line is that Metalama supports a new .NET SDK on the day it ships, and the cost of bundling a Roslyn that
-  has no stable counterpart is acceptable there. The source branch is whichever one the derivation above
-  names: `release/insiders` for .NET 11 RC 1, `release/stable` for SDK `11.0.100-preview.7` before it.
-- **A stable line follows a stable Roslyn branch: the branch of the GA SDK.** This is the rule for
-  `develop/2026.1`, which stays on the Roslyn of the GA .NET SDK (`release/10.0.4xx`, Roslyn `5.9.0`,
-  SDK `10.0.400` as of 2026-09). A stable line never takes a preview or release candidate band, because the
-  version it would bundle is one that no GA SDK ships and that nuget.org never publishes.
+| Metalama branch | .NET SDK major version tracked |
+|---|---|
+| `develop/2027.0` | .NET 11 |
+| `develop/2026.1` | .NET 10 |
 
-The rule follows the Metalama version line, not the calendar. When Metalama 2027.0 stops being a preview, its
-branch stops following preview SDKs and moves to the Roslyn of the GA SDK of the day; issue
-[#215](https://github.com/metalama/Metalama.Compiler/issues/215) is that move.
+Apply the three steps in order:
 
-A `LAMA0617` decides the urgency, not the branch: raised against a preview SDK it is work for the preview
-line, and raised against the GA SDK it is work for the stable line.
+1. Take the .NET SDK major version that the branch being merged into tracks.
+2. Take the newest release of that major version. Its maturity is not a criterion: a preview or a release
+   candidate counts exactly as a general availability release does.
+3. Take the Roslyn build of that release, then the upstream branch that holds its commit, and merge that
+   branch at its tip, because the tip carries the latest servicing fixes for the line.
 
-Confirm which SDK a branch actually feeds rather than inferring it from the branch name:
+The maturity of the release is deliberately not part of the decision. A Metalama version line exists to
+support a .NET major version, and it has to support that version from the first preview, so waiting for
+general availability would leave the tracked version unsupported for most of its preview cycle. What keeps a
+stable Metalama line on a stable Roslyn is that the major version it tracks is itself already released, not a
+rule about maturity.
+
+A line does not change the major version it tracks. When a newer .NET major version appears, it is a new
+Metalama version line that tracks it, not a move of an existing one. Issue
+[#215](https://github.com/metalama/Metalama.Compiler/issues/215) is such a step for `develop/2027.0`, taking
+the Roslyn of a later .NET 11 release.
+
+A `LAMA0617` says the merge is overdue; it never changes which branch to merge. Read the .NET major version of
+the SDK that raised it, and the line that tracks that major version is the line the work belongs to.
+
+The newest release of a major version is the `latest-sdk` of its channel. Read it from the release metadata
+of that channel, not from a branch name and not from nuget.org:
 
 ```powershell
-# Latest released SDK of a channel. 'support-phase' is 'preview' for a preview channel.
+# Replace 11.0 with the major version the Metalama branch tracks.
 Invoke-RestMethod https://builds.dotnet.microsoft.com/dotnet/release-metadata/11.0/releases.json |
     Select-Object channel-version, latest-sdk, latest-release, latest-release-date, support-phase
 ```
+
+`support-phase` is reported for completeness. Do not filter on it: `preview` and `go-live` releases are
+tracked exactly like an `active` one.
 
 Then cross-check that SDK's Roslyn version against
 `eng-Metalama/DownloadNetSdkAnalyzers/net-sdk-releases.json` and against the branch's `eng/Versions.props`.
@@ -167,8 +182,9 @@ repository under `build/package-feeds.md`, which holds the list and the procedur
 
 ## 1. Identify the target branch
 
-Follow the [source selection policy](#source-selection-policy) above: find the SDK that the branch being
-merged into has to follow, then the upstream branch that produces its Roslyn.
+Follow the [source selection policy](#source-selection-policy) above: take the .NET SDK major version that
+the branch being merged into tracks, take the newest release of that major version whatever its maturity, then
+take the upstream branch that holds the Roslyn commit of that release.
 
 ```powershell
 git fetch upstream
