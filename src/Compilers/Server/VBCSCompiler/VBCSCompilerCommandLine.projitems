@@ -38,6 +38,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)CompilerRequestHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CompilerServerTelemetry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CompletionData.cs" />
+    <!-- <Metalama> -->
+    <Compile Include="$(MSBuildThisFileDirectory)MetalamaCompilerTelemetry.cs" />
+    <!-- </Metalama> -->
     <Compile Include="$(MSBuildThisFileDirectory)CSharpCompilerServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DiagnosticListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IClientConnection.cs" />

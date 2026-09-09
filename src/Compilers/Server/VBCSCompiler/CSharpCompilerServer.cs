@@ -79,9 +79,14 @@ namespace Microsoft.CodeAnalysis.CompilerServer
 
         public IReadOnlyList<BuildTelemetryEvent> GetTelemetryEvents()
         {
+            // <Metalama>
+            // Upstream returns an empty list when the compilation cache reported nothing. This fork always
+            // reports which compiler ran, so that a host collecting Roslyn telemetry is not told about a
+            // compiler server that did not perform the build. See MetalamaCompilerTelemetry.
             return _cacheTelemetry.HasData
-                ? [_cacheTelemetry.ToTelemetryEvent(LanguageNames.CSharp)]
-                : [];
+                ? [MetalamaCompilerTelemetry.CreateForkEvent(), _cacheTelemetry.ToTelemetryEvent(LanguageNames.CSharp)]
+                : [MetalamaCompilerTelemetry.CreateForkEvent()];
+            // </Metalama>
         }
     }
 }
