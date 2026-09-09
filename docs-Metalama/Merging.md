@@ -153,8 +153,17 @@ in `nuget.config`.
 `NU1101` has a second cause that looks identical from the build log: the nginx allow-list in front of ProGet
 can reject the package id before ProGet ever sees it. Tell them apart by requesting the package through the
 proxy — a `text/html` 404 body is nginx refusing it, while a 404 with no content type is ProGet reporting that
-it holds no such package. The 2026-08 merge needed `microsoft.webtools` added to that allow-list for the Razor
-test projects; see the infrastructure repository under `build/package-feeds.md`.
+it holds no such package. Probe the path the allow-list guards, `v3/flatcontainer/<id>/index.json`; a request
+to ProGet's own `v3/flat2/` path bypasses the filter and cannot tell the two causes apart.
+
+```powershell
+curl.exe -s -o NUL -D - https://proget.postsharp.net/nuget/roslyn-consolidated/v3/flatcontainer/<id>/index.json
+```
+
+The allow-list is namespace-level, so one entry covers a whole package family. See the infrastructure
+repository under `build/package-feeds.md`, which holds the list and the procedure. The 2026-08 merge needed
+`microsoft.webtools` added for the Razor test projects, and the 5.11 merge needs `maestro` and
+`microsoft.dnceng` for `src/Tools/dotnet-roslyn-tools`, which upstream added on `release/insiders`.
 
 ## 1. Identify the target branch
 
@@ -199,7 +208,15 @@ Recurring conflicts and how they are resolved:
 - `global.json` — upstream's SDK and `msbuild-sdks` versions, plus our `PostSharp.Engineering.Sdk` entry.
   When the SDK version changes, see [step 5](#5-match-the-build-agent-to-globaljson) — the build agent has to
   be updated to match, or CI fails before it compiles anything.
-- `Roslyn.slnx` — both sides; watch the XML nesting, a naive union breaks the `</Folder>` pairing.
+- `Roslyn.slnx` — both sides; watch the XML nesting, a naive union breaks the `</Folder>` pairing. The
+  Metalama folder is inserted at the point where upstream also adds folders, so the conflict is the two
+  insertions, not a real disagreement.
+- `eng/config/PublishData.json` — upstream's. It configures the Visual Studio insertion, which Metalama does
+  not perform, and it carries no Metalama divergence. Its `vsBranch` and `insertionTitlePrefix` name the
+  upstream branch, so they change whenever the merge changes branch.
+- `src/Compilers/Core/Portable/PublicAPI.Unshipped.txt` — upstream's, plus the `Metalama.Compiler.*` entries.
+  Upstream edits this file constantly, and it also removes the `[RSEXPERIMENTAL*]` marker from an API when
+  the API graduates, which conflicts with the same lines carried over from the previous merge.
 - `Metalama.Compiler.slnf` — ours, but re-check every path: upstream moves projects (e.g. `src/Tools/Source/*`
   → `src/Tools/*`). Validate that every entry in `projects` exists after the merge.
 - Generated files under `Generated/CSharpSyntaxGenerator/` — keep the Metalama `TreeTracker` hooks and take
