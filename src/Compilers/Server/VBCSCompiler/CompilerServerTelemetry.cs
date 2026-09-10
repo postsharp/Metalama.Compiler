@@ -152,6 +152,13 @@ namespace Microsoft.CodeAnalysis.CompilerServer
         {
             var properties = new Dictionary<string, string>(8)
             {
+                // <Metalama>
+                // The cache behaviour reported here is that of the Metalama Compiler fork, not that of the
+                // compiler server of the .NET SDK. Name the fork on the event itself, so that the event
+                // remains attributable when it is read on its own.
+                ["fork"] = MetalamaCompilerTelemetry.ForkName,
+                ["forkversion"] = MetalamaCompilerTelemetry.ForkVersion,
+                // </Metalama>
                 ["cachestatus"] = Status switch
                 {
                     CompilationCacheStatus.Hit => "hit",
