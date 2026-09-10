@@ -24,3 +24,18 @@ param(
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $ContainerEnvironmentVariables['NUGET_PACKAGES'] = Join-Path $repoRoot '.packages'
 $ContainerEnvironmentVariables['RESTORENOCACHE'] = 'true'
+
+# From .NET 11 on, dotnet-install.ps1 downloads a .tar.gz on Windows instead of a .zip and extracts it by
+# invoking tar as an external process. Every generated Windows image puts C:\git\usr\bin ahead of System32 in
+# PATH, so that call resolves to the GNU tar of Git for Windows, which reads the leading 'C:' of the archive
+# path as the name of a remote host and fails with "Cannot connect to C: resolve failed".
+#
+# PostSharp.Engineering already sets DOTNET_INSTALL_SKIP_TAR on the RUN instruction that installs the SDK into
+# the image, so building the image works. It does not cover the second installation, which Arcade performs
+# inside the container: this repository's global.json declares tools.runtimes, and eng/common/tools.ps1 then
+# ignores the SDK of the image and installs its own copy under <repo>\.dotnet, without the variable. That is
+# what failed build 336139 of the Roslyn 5.11 merge, in the step that runs eng/build.ps1.
+#
+# Setting the variable for the whole container covers that installation and any later one. It is inert for a
+# .NET 10 or earlier SDK, which dotnet-install.ps1 downloads as a .zip in the first place.
+$ContainerEnvironmentVariables['DOTNET_INSTALL_SKIP_TAR'] = '1'
